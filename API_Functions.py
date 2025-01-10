@@ -20,3 +20,4 @@ def calories_API(date, header):
     response = requests.get(url=calories_endpoint, headers=header).json()
     return response['activities-calories'][0]['value']
 
+#add a line that finds the response code. If response code = 200, return data, otherwise return response code

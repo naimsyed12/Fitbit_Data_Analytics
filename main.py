@@ -4,8 +4,10 @@ from datetime import date, timedelta
 from API_Functions import weight_API, steps_API, calories_API
 import psycopg2
 
+
 #Setting up function arguments
 yesterday = date.today() - timedelta(1)
+date_string = yesterday.strftime('%Y-%m-%d') 
 
 access_key = os.getenv("Fitbit_Annual_Access_Key")
 
@@ -13,11 +15,16 @@ header = {"Authorization": f'Bearer {access_key}',
           "accept-language": "en_US"}
 
 
+
+#Start logging file
+log_file = open("../fitbit_log.txt", "a") 
+log_file.write(f'Started Fitbit Data Collection for {date_string} \n')
+
+
 current_weight = weight_API(yesterday, header)
 current_steps = steps_API(yesterday, header)
 current_calories = calories_API(yesterday, header)
 
-date_string = yesterday.strftime('%Y-%m-%d') 
 
 
 connection = psycopg2.connect(
@@ -37,3 +44,6 @@ cursur.execute(
 connection.commit()
 cursur.close()
 connection.close()
+
+log_file.write(f'Completed Fitbit Data Collection for {date_string} \n')
+log_file.close()
