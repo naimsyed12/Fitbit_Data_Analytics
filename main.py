@@ -20,30 +20,36 @@ header = {"Authorization": f'Bearer {access_key}',
 log_file = open("../fitbit_log.txt", "a") 
 log_file.write(f'Started Fitbit Data Collection for {date_string} \n')
 
+#Collection of Daily Weight, Steps, and Calories data from APIs
+try: 
+    current_weight = weight_API(yesterday, header)
+    current_steps = steps_API(yesterday, header)
+    current_calories = calories_API(yesterday, header)
+except:
+    log_file.write("API Exception Occured")
 
-current_weight = weight_API(yesterday, header)
-current_steps = steps_API(yesterday, header)
-current_calories = calories_API(yesterday, header)
+#Loading data into SQL Database 
+try: 
+    connection = psycopg2.connect(
+        database = "Naim_Fitbit",
+        user = "postgres",
+        password = os.getenv('Postgre'),
+        host = 'localhost',
+        port = '5432'
+    )  
 
+    cursur = connection.cursor()
 
+    cursur.execute(
+        "INSERT INTO health (date, steps, calories, weight) VALUES (%s, %s, %s, %s)", (date_string, current_steps, current_calories, current_weight)
+    )
 
-connection = psycopg2.connect(
-    database = "Naim_Fitbit",
-    user = "postgres",
-    password = os.getenv('Postgre'),
-    host = 'localhost',
-    port = '5432'
-)  
+    connection.commit()
+    cursur.close()
+    connection.close()
+except:
+    log_file.write("SQL Loading Exception Failed")
 
-cursur = connection.cursor()
-
-cursur.execute(
-    "INSERT INTO health (date, steps, calories, weight) VALUES (%s, %s, %s, %s)", (date_string, current_steps, current_calories, current_weight)
-)
-
-connection.commit()
-cursur.close()
-connection.close()
 
 log_file.write(f'Completed Fitbit Data Collection for {date_string} \n')
 log_file.close()
